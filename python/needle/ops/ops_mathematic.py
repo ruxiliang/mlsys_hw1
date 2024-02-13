@@ -204,6 +204,7 @@ class BroadcastTo(TensorOp):
 
     def gradient(self, out_grad: Tensor, node: Tensor):
         # BEGIN YOUR SOLUTION
+        # a -> a(1),a(2) so da = da1 + da2
         input_shape = node.inputs[0].shape
         out_shape = out_grad.shape
         return out_grad.sum(tuple(list(range(len(out_shape) - len(input_shape))) + [idx + len(out_shape) - len(input_shape) for idx, cnt in enumerate(input_shape) if cnt == 1])).reshape(input_shape)

@@ -115,6 +115,7 @@ def nn_epoch(X, y, W1, W2, lr=0.1, batch=100):
         Z = ndl.matmul(ndl.relu(ndl.matmul(X_batch, W1)), W2)
         loss = softmax_loss(Z, y_batch)
         loss.backward()
+        # note that we do not want param update in the forward graph, detach is required
         W1 = (W1 - lr * W1.grad).detach()
         W2 = (W2 - lr * W2.grad).detach()
     return (W1, W2)
