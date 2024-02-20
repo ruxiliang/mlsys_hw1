@@ -467,8 +467,12 @@ def gradient_check(f, *args, tol=1e-6, backward=False, **kwargs):
 
 
 def test_power_scalar_backward():
+    np.random.seed(42)
     gradient_check(
         ndl.power_scalar, ndl.Tensor(np.random.randn(5, 4)), scalar=np.random.randint(1)
+    )
+    gradient_check(
+        ndl.power_scalar, ndl.Tensor(np.random.randn(5, 4)), scalar=np.random.randint(3)
     )
 
 def test_divide_backward():

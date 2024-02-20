@@ -82,7 +82,7 @@ class PowerScalar(TensorOp):
 
     def gradient(self, out_grad: Tensor, node: Tensor):
         # BEGIN YOUR SOLUTION
-        return out_grad * self.scalar * node.data ** (self.scalar)
+        return out_grad * self.scalar * node.inputs[0] ** (self.scalar - 1)
         # END YOUR SOLUTION
 
 
@@ -104,7 +104,7 @@ class EWisePow(TensorOp):
 
         a, b = node.inputs[0], node.inputs[1]
         grad_a = out_grad * b * (a ** (b - 1))
-        grad_b = out_grad * (a**b) * array_api.log(a.data)
+        grad_b = out_grad * (a**b) * log(a)
         return grad_a, grad_b
 
 
@@ -123,7 +123,7 @@ class EWiseDiv(TensorOp):
     def gradient(self, out_grad: Tensor, node: Tensor):
         # BEGIN YOUR SOLUTION
         a, b = node.inputs
-        return out_grad * (Tensor(array_api.ones_like(out_grad))/b), (-a/(b**2))
+        return out_grad / b, out_grad * (-a/(b**2))
         # END YOUR SOLUTION
 
 
@@ -142,7 +142,7 @@ class DivScalar(TensorOp):
 
     def gradient(self, out_grad: Tensor, node: Tensor):
         # BEGIN YOUR SOLUTION
-        return out_grad * (Tensor(array_api.ones_like(out_grad))) / self.scalar
+        return out_grad / self.scalar
         # END YOUR SOLUTION
 
 
@@ -207,7 +207,7 @@ class BroadcastTo(TensorOp):
         # a -> a(1),a(2) so da = da1 + da2
         input_shape = node.inputs[0].shape
         out_shape = out_grad.shape
-        return out_grad.sum(tuple(list(range(len(out_shape) - len(input_shape))) + [idx + len(out_shape) - len(input_shape) for idx, cnt in enumerate(input_shape) if cnt == 1])).reshape(input_shape)
+        return out_grad.sum(tuple(list(range(len(out_shape) - len(input_shape))) + [idx + len(out_shape) - len(input_shape) for idx, cnt in enumerate(zip(input_shape, out_shape[len(out_shape) - len(input_shape):])) if cnt[0] == 1 and cnt[0] != cnt[1]])).reshape(input_shape)
         # END YOUR SOLUTION
 
 
@@ -231,7 +231,8 @@ class Summation(TensorOp):
         if self.axes is None:
             out_shape = (1,) * len(input_shape)
         else:
-            out_shape = tuple([1 if idx in self.axes else elem for idx, elem in enumerate(input_shape)])
+            out_shape = tuple(
+                [1 if idx in self.axes else elem for idx, elem in enumerate(input_shape)])
         return out_grad.reshape(out_shape).broadcast_to(input_shape)
         # END YOUR SOLUTION
 
@@ -289,7 +290,7 @@ class Log(TensorOp):
 
     def gradient(self, out_grad, node):
         # BEGIN YOUR SOLUTION
-        return out_grad  / node.inputs[0]
+        return out_grad / node.inputs[0]
         # END YOUR SOLUTION
 
 
@@ -321,7 +322,7 @@ class ReLU(TensorOp):
 
     def gradient(self, out_grad, node):
         # BEGIN YOUR SOLUTION
-        return out_grad * Tensor(node.realize_cached_data().copy() > 0)
+        return out_grad * Tensor(node.realize_cached_data().copy() > 0, device=node.device, dtype=node.dtype, requires_grad=node.requires_grad)
         # END YOUR SOLUTION
 
 
